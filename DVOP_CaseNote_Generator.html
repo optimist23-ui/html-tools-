@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DVOP Case Note Generator</title>
+<style>
+:root {
+  --navy:   #1a2744;
+  --gold:   #c8a84b;
+  --teal:   #0d7377;
+  --green:  #1a7a4a;
+  --green-bg:#e6f4ed;
+  --amber:  #b06000;
+  --amber-bg:#fff3e0;
+  --red:    #c0392b;
+  --red-bg: #fdecea;
+  --blue:   #1a5276;
+  --blue-bg:#ebf5fb;
+  --gray:   #5f6b7a;
+  --gray-bg:#f0f2f4;
+  color-scheme: light;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:14px;min-height:100vh;}
+
+/* ── HEADER ─────────────────────────────────── */
+.app-header{background:linear-gradient(135deg,var(--navy) 0%,#1e3a5f 100%);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+.app-header .brand{display:flex;align-items:center;gap:12px;}
+.badge{background:var(--gold);color:var(--navy);font-size:10px;font-weight:800;padding:3px 9px;border-radius:10px;letter-spacing:1px;text-transform:uppercase;}
+.app-header h1{color:#fff;font-size:1.1rem;font-weight:700;}
+.app-header p{color:#8eaed0;font-size:0.75rem;margin-top:2px;}
+.header-meta{color:#8eaed0;font-size:0.75rem;text-align:right;}
+.header-meta span{color:#64ffda;font-weight:600;}
+
+/* ── SCENARIO PICKER ─────────────────────────── */
+.scenario-section{padding:20px 24px 0;}
+.scenario-label{font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.8px;color:#8892b0;margin-bottom:12px;}
+.scenario-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:720px){.scenario-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:420px){.scenario-grid{grid-template-columns:1fr;}}
+.scenario-card{background:#fff;border:2px solid #dde1ea;border-radius:12px;padding:16px 14px;cursor:pointer;transition:all 0.18s;text-align:center;user-select:none;}
+.scenario-card:hover{border-color:var(--navy);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.1);}
+.scenario-card.active{border-color:var(--navy);background:var(--navy);}
+.scenario-card .sc-icon{font-size:1.8rem;margin-bottom:8px;display:block;}
+.scenario-card .sc-title{font-size:0.82rem;font-weight:800;color:var(--navy);}
+.scenario-card .sc-sub{font-size:0.7rem;color:#8892b0;margin-top:3px;}
+.scenario-card.active .sc-title,.scenario-card.active .sc-sub{color:#fff;}
+.scenario-card.active .sc-sub{color:#8eaed0;}
+/* accent colors per scenario */
+.scenario-card.sc-outbound:hover,.scenario-card.sc-outbound.active{border-color:#1a5276;background:#1a5276;}
+.scenario-card.sc-checkin:hover,.scenario-card.sc-checkin.active{border-color:var(--teal);background:var(--teal);}
+.scenario-card.sc-success:hover,.scenario-card.sc-success.active{border-color:var(--green);background:var(--green);}
+.scenario-card.sc-unsuccessful:hover,.scenario-card.sc-unsuccessful.active{border-color:var(--red);background:var(--red);}
+
+/* ── MAIN LAYOUT ─────────────────────────────── */
+.main{display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 24px 24px;}
+@media(max-width:860px){.main{grid-template-columns:1fr;}}
+.col-form,.col-output{display:flex;flex-direction:column;gap:14px;}
+
+/* ── CARDS ───────────────────────────────────── */
+.card{background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border:1px solid #edf0f7;}
+.card-title{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;color:var(--navy);margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #edf0f7;display:flex;align-items:center;gap:7px;}
+.card-title .ct-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;}
+
+/* scenario accent bar */
+.card.accent-blue  .card-title .ct-dot{background:#1a5276;}
+.card.accent-teal  .card-title .ct-dot{background:var(--teal);}
+.card.accent-green .card-title .ct-dot{background:var(--green);}
+.card.accent-red   .card-title .ct-dot{background:var(--red);}
+
+/* ── FORM CONTROLS ───────────────────────────── */
+.form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.form-group{display:flex;flex-direction:column;flex:1;min-width:130px;}
+.form-group.full{flex:none;width:100%;}
+.form-group label{font-size:0.7rem;font-weight:700;color:#5a6a80;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+.form-group input,.form-group select,.form-group textarea{border:1.5px solid #cdd5e0;border-radius:7px;padding:8px 10px;font-size:0.84rem;color:#1a202c;background:#fafbfc;font-family:inherit;transition:border-color 0.15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--teal);background:#fff;}
+.form-group textarea{resize:vertical;min-height:62px;line-height:1.55;}
+.form-group select{cursor:pointer;}
+
+/* ── OUTCOME OPTIONS ─────────────────────────── */
+.outcome-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px;}
+.outcome-opt{display:flex;align-items:flex-start;gap:8px;padding:9px 11px;border:1.5px solid #dde1ea;border-radius:8px;cursor:pointer;transition:all 0.15s;}
+.outcome-opt:hover{border-color:var(--teal);}
+.outcome-opt input[type=radio]{margin-top:2px;accent-color:var(--teal);flex-shrink:0;}
+.outcome-opt .opt-label{font-size:0.78rem;font-weight:600;color:#333;line-height:1.35;}
+.outcome-opt .opt-sub{font-size:0.7rem;color:#8892b0;margin-top:1px;}
+.outcome-opt.selected-success{border-color:var(--green);background:var(--green-bg);}
+.outcome-opt.selected-fail{border-color:var(--red);background:var(--red-bg);}
+
+/* ── SECTION HIDDEN ──────────────────────────── */
+.hidden{display:none!important;}
+
+/* ── SCENARIO ALERT ──────────────────────────── */
+.scenario-alert{border-radius:8px;padding:10px 14px;font-size:0.8rem;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.alert-blue      {background:var(--blue-bg);color:var(--blue);border-left:4px solid var(--blue);}
+.alert-teal      {background:var(--teal-lt,#e0f4f4);color:var(--teal);border-left:4px solid var(--teal);}
+.alert-green     {background:var(--green-bg);color:var(--green);border-left:4px solid var(--green);}
+.alert-red       {background:var(--red-bg);color:var(--red);border-left:4px solid var(--red);}
+
+/* ── BUTTONS ─────────────────────────────────── */
+.btn{padding:9px 18px;border-radius:8px;font-size:0.84rem;font-weight:700;cursor:pointer;border:none;transition:all 0.15s;letter-spacing:0.2px;}
+.btn:active{transform:scale(0.97);}
+.btn-primary{background:var(--navy);color:#fff;}
+.btn-primary:hover{background:#243558;}
+.btn-gold{background:var(--gold);color:var(--navy);}
+.btn-gold:hover{background:#b8983b;}
+.btn-ghost{background:#f0f2f5;color:#555;border:1.5px solid #dde1ea;}
+.btn-ghost:hover{background:#e5e8ef;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-sm{padding:6px 13px;font-size:0.77rem;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+
+/* ── OUTPUT ──────────────────────────────────── */
+.output-wrap{position:relative;}
+.output-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;}
+.output-tag{font-size:0.7rem;font-weight:800;text-transform:uppercase;letter-spacing:0.7px;padding:3px 10px;border-radius:10px;}
+.tag-blue  {background:var(--blue-bg);color:var(--blue);}
+.tag-teal  {background:#e0f4f4;color:var(--teal);}
+.tag-green {background:var(--green-bg);color:var(--green);}
+.tag-red   {background:var(--red-bg);color:var(--red);}
+.output-area{background:#1a202c;color:#e2e8f0;border-radius:10px;padding:20px 22px;font-family:'SF Mono','Fira Code','Courier New',monospace;font-size:0.79rem;line-height:1.75;white-space:pre-wrap;min-height:120px;border:1px solid #2d3748;max-height:72vh;overflow-y:auto;}
+.output-placeholder{color:#4a5568;font-style:italic;}
+
+/* ── COPY BUTTON ─────────────────────────────── */
+.copy-btn{background:#2d3748;color:#a0aec0;border:1px solid #4a5568;border-radius:6px;padding:5px 13px;font-size:0.74rem;cursor:pointer;font-weight:700;transition:all 0.15s;}
+.copy-btn:hover{background:#4a5568;color:#fff;}
+.copy-btn.copied{background:#276749;color:#9ae6b4;border-color:#276749;}
+
+/* ── CHAR COUNT ──────────────────────────────── */
+.char-count{font-size:0.7rem;color:#8892b0;margin-top:4px;text-align:right;}
+
+/* ── NOTICE ──────────────────────────────────── */
+.notice{background:#ebf4ff;border-left:4px solid var(--navy);border-radius:6px;padding:9px 13px;font-size:0.79rem;color:#2c5282;line-height:1.5;}
+
+/* ── DIVIDER ─────────────────────────────────── */
+hr.dv{border:none;border-top:1px solid #edf0f7;margin:10px 0;}
+
+/* ── JSON PANEL ──────────────────────────────── */
+.json-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.52);z-index:400;align-items:flex-start;justify-content:center;padding:30px 20px;overflow-y:auto;}
+.json-overlay.open{display:flex;}
+.json-modal{background:#fff;border-radius:14px;width:720px;max-width:100%;box-shadow:0 12px 48px rgba(0,0,0,0.25);overflow:hidden;}
+.json-modal-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 24px;background:var(--navy);gap:10px;}
+.json-modal-hdr h2{color:#fff;font-size:0.95rem;font-weight:700;}
+.json-modal-hdr p{color:#8eaed0;font-size:0.74rem;margin-top:2px;}
+.json-close-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;font-size:1.1rem;cursor:pointer;width:30px;height:30px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.json-tabs{display:flex;border-bottom:1.5px solid #edf0f7;}
+.json-tab{padding:11px 18px;font-size:0.8rem;font-weight:700;cursor:pointer;border:none;background:transparent;color:#8892b0;border-bottom:3px solid transparent;transition:all 0.15s;}
+.json-tab.active{color:var(--teal);border-bottom-color:var(--teal);}
+.json-body{padding:20px;}
+.json-hint{background:#e0f4f4;border-radius:8px;padding:10px 14px;font-size:0.77rem;color:var(--teal);margin-bottom:14px;line-height:1.55;}
+.json-hint code{background:rgba(0,0,0,0.07);border-radius:3px;padding:1px 5px;font-family:monospace;font-size:0.85em;}
+textarea.json-editor{width:100%;height:300px;font-family:'SF Mono','Fira Code',monospace;font-size:0.78rem;border:1.5px solid #dde1ea;border-radius:8px;padding:14px;outline:none;resize:vertical;background:#fafbfd;color:#1a1a2e;line-height:1.6;}
+textarea.json-editor:focus{border-color:var(--teal);}
+.json-editor[readonly]{background:#f5f7fa;color:#555;}
+.json-status{font-size:0.78rem;padding:7px 12px;border-radius:6px;margin-top:10px;display:none;}
+.json-status.ok{background:var(--green-bg);color:var(--green);display:block;}
+.json-status.err{background:var(--red-bg);color:var(--red);display:block;}
+.json-actions{display:flex;gap:10px;margin-top:14px;justify-content:flex-end;}
+/* profiles */
+.profile-list{margin-bottom:14px;display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;}
+.profile-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fafbfd;border:1.5px solid #edf0f7;border-radius:8px;}
+.profile-item .pi-name{font-size:0.82rem;font-weight:700;color:var(--navy);}
+.profile-item .pi-sub{font-size:0.7rem;color:#8892b0;margin-top:1px;}
+.profile-item .pi-btns{display:flex;gap:6px;}
+.profile-empty{text-align:center;color:#b0b7c9;font-style:italic;font-size:0.8rem;padding:20px;}
+.json-btn-header{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.22);color:#64ffda;border-radius:7px;padding:7px 14px;font-size:0.76rem;font-weight:700;cursor:pointer;transition:all 0.15s;white-space:nowrap;}
+.json-btn-header:hover{background:rgba(255,255,255,0.2);}
+
+/* ── EMPTY STATE ─────────────────────────────── */
+.empty-state{text-align:center;padding:40px 20px;color:#8892b0;}
+.empty-state .es-icon{font-size:2.4rem;margin-bottom:10px;display:block;}
+.empty-state p{font-size:0.82rem;}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ HEADER ═══════════════════════════ -->
+<div class="app-header">
+  <div class="brand">
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;">
+        <span class="badge">JVSG DVOP</span>
+      </div>
+      <h1>Case Note Generator</h1>
+      <p>American Job Center – Clarksville &nbsp;·&nbsp; Program: Jobs for Veterans State Grant</p>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div class="header-meta" style="text-align:right;">
+      Case Manager: <span>Mario McMichael, DVOP</span><br>
+      System: <span>Jobs4TN / VOS</span>
+    </div>
+    <button class="json-btn-header" onclick="openJsonPanel()">{ } JSON</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ SCENARIO PICKER ═══════════════════════════ -->
+<div class="scenario-section">
+  <div class="scenario-label">Select Contact Scenario</div>
+  <div class="scenario-grid">
+    <div class="scenario-card sc-outbound" onclick="setScenario('outbound',this)">
+      <span class="sc-icon">📞</span>
+      <div class="sc-title">Outbound Call</div>
+      <div class="sc-sub">You called the client</div>
+    </div>
+    <div class="scenario-card sc-checkin" onclick="setScenario('checkin',this)">
+      <span class="sc-icon">📋</span>
+      <div class="sc-title">Check-In</div>
+      <div class="sc-sub">Bi-weekly / scheduled follow-up</div>
+    </div>
+    <div class="scenario-card sc-success" onclick="setScenario('success',this)">
+      <span class="sc-icon">✅</span>
+      <div class="sc-title">Successful Contact</div>
+      <div class="sc-sub">Client reached & engaged</div>
+    </div>
+    <div class="scenario-card sc-unsuccessful" onclick="setScenario('unsuccessful',this)">
+      <span class="sc-icon">🚫</span>
+      <div class="sc-title">Unsuccessful Contact</div>
+      <div class="sc-sub">No answer / VM / no reply</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ MAIN LAYOUT ═══════════════════════════ -->
+<div class="main">
+
+  <!-- ───────────────── LEFT: FORM ───────────────── -->
+  <div class="col-form">
+
+    <!-- EMPTY STATE -->
+    <div id="empty-state" class="card">
+      <div class="empty-state">
+        <span class="es-icon">☝️</span>
+        <p>Select a contact scenario above to begin building your case note.</p>
+      </div>
+    </div>
+
+    <!-- ── CASE HEADER (shared, shown once scenario selected) ── -->
+    <div class="card hidden" id="card-header">
+      <div class="card-title"><span class="ct-dot"></span> Case Header</div>
+
+      <div id="scenario-alert" class="scenario-alert alert-blue hidden"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Date of Contact</label>
+          <input type="date" id="h-date"/>
+        </div>
+        <div class="form-group">
+          <label>Time</label>
+          <input type="time" id="h-time"/>
+        </div>
+        <div class="form-group">
+          <label>Case Manager</label>
+          <input type="text" id="h-cm" value="Mario McMichael"/>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Veteran Name</label>
+          <input type="text" id="h-vet" placeholder="Last, First M."/>
+        </div>
+        <div class="form-group">
+          <label>State ID</label>
+          <input type="text" id="h-id" placeholder="0000000"/>
+        </div>
+        <div class="form-group">
+          <label>Service Code</label>
+          <select id="h-svc">
+            <option value="200 – Staff Assisted / Follow-Up">200 – Staff Assisted / Follow-Up</option>
+            <option value="200 – Individualized Career Service">200 – Individualized Career Service</option>
+            <option value="201 – Objective Assessment">201 – Objective Assessment</option>
+            <option value="202 – Employment Plan Development">202 – Employment Plan Development</option>
+            <option value="203 – Case Management">203 – Case Management</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>AJC Location</label>
+          <select id="h-location">
+            <option value="Clarksville American Job Center">Clarksville American Job Center</option>
+            <option value="Nashville American Job Center">Nashville American Job Center</option>
+            <option value="Memphis American Job Center">Memphis American Job Center</option>
+            <option value="Knoxville American Job Center">Knoxville American Job Center</option>
+            <option value="Chattanooga American Job Center">Chattanooga American Job Center</option>
+            <option value="Jackson American Job Center">Jackson American Job Center</option>
+            <option value="Murfreesboro American Job Center">Murfreesboro American Job Center</option>
+            <option value="OTHER">Other (type below)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Other Location</label>
+          <input type="text" id="h-location-other" placeholder="Enter location if Other"/>
+        </div>
+      </div>
+    </div><!-- /card-header -->
+
+    <!-- ── OUTBOUND CALL FIELDS ── -->
+    <div class="card hidden accent-blue" id="card-outbound">
+      <div class="card-title"><span class="ct-dot"></span> Outbound Call Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Phone Number Dialed</label>
+          <input type="text" id="ob-phone" placeholder="(xxx) xxx-xxxx"/>
+        </div>
+        <div class="form-group">
+          <label>Number Type</label>
+          <select id="ob-numtype">
+            <option>Primary Cell</option>
+            <option>Home Phone</option>
+            <option>Secondary Number</option>
+            <option>Number on File</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Number of Attempts</label>
+          <select id="ob-attempts">
+            <option value="1">1 attempt</option>
+            <option value="2">2 attempts</option>
+            <option value="3">3 attempts</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Call Outcome</label>
+          <div class="outcome-grid" id="ob-outcome-grid">
+            <label class="outcome-opt" id="ob-opt-reached">
+              <input type="radio" name="ob-outcome" value="reached" onchange="onOutcomeChange('ob')"/>
+              <div><div class="opt-label">✅ Reached Client</div><div class="opt-sub">Veteran answered the call</div></div>
+            </label>
+            <label class="outcome-opt" id="ob-opt-vm">
+              <input type="radio" name="ob-outcome" value="vm" onchange="onOutcomeChange('ob')"/>
+              <div><div class="opt-label">📬 No Answer – Voicemail Left</div><div class="opt-sub">VM left requesting callback</div></div>
+            </label>
+            <label class="outcome-opt" id="ob-opt-novm">
+              <input type="radio" name="ob-outcome" value="novm" onchange="onOutcomeChange('ob')"/>
+              <div><div class="opt-label">🔇 No Answer – No Voicemail</div><div class="opt-sub">Rang, no VM available</div></div>
+            </label>
+            <label class="outcome-opt" id="ob-opt-disc">
+              <input type="radio" name="ob-outcome" value="disconnected" onchange="onOutcomeChange('ob')"/>
+              <div><div class="opt-label">❌ Disconnected / Not in Service</div><div class="opt-sub">Number no longer works</div></div>
+            </label>
+          </div>
+        </div>
+      </div>
+      <!-- Shown only if reached -->
+      <div id="ob-reached-fields" class="hidden">
+        <hr class="dv"/>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Conversation Duration (approx.)</label>
+            <select id="ob-duration">
+              <option value="">-- Select --</option>
+              <option>less than 5 minutes</option>
+              <option>approximately 5–10 minutes</option>
+              <option>approximately 10–15 minutes</option>
+              <option>approximately 15–20 minutes</option>
+              <option>approximately 20–30 minutes</option>
+              <option>over 30 minutes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Client Disposition</label>
+            <select id="ob-disposition">
+              <option value="">-- Select --</option>
+              <option>Cooperative and engaged</option>
+              <option>Cooperative but brief</option>
+              <option>Cooperative – indicated interest in services</option>
+              <option>Reluctant but responsive</option>
+              <option>Requested to be contacted at a different time</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <!-- Follow-up actions (outbound) -->
+      <hr class="dv"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Follow-Up Email Sent After Call?</label>
+          <select id="ob-email-after">
+            <option value="">No / N/A</option>
+            <option value="yes">Yes – follow-up email sent</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Text Sent After Call?</label>
+          <select id="ob-text-after">
+            <option value="">No / N/A</option>
+            <option value="yes">Yes – follow-up text sent</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Additional Notes</label>
+          <textarea id="ob-notes" placeholder="Any additional details about this outbound call attempt..."></textarea>
+        </div>
+      </div>
+    </div><!-- /card-outbound -->
+
+    <!-- ── CHECK-IN FIELDS ── -->
+    <div class="card hidden accent-teal" id="card-checkin">
+      <div class="card-title"><span class="ct-dot"></span> Check-In Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Check-In Type</label>
+          <select id="ci-type">
+            <option value="Bi-Weekly Follow-Up">Bi-Weekly Follow-Up</option>
+            <option value="30-Day Follow-Up">30-Day Follow-Up</option>
+            <option value="90-Day Follow-Up">90-Day Follow-Up</option>
+            <option value="Monthly Check-In">Monthly Check-In</option>
+            <option value="Scheduled Appointment">Scheduled Appointment</option>
+            <option value="Re-Engagement Contact">Re-Engagement Contact</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Contact Method</label>
+          <select id="ci-method">
+            <option>Phone</option>
+            <option>Email</option>
+            <option>Text Messaging</option>
+            <option>In-Person</option>
+            <option>Virtual (Teams / Zoom)</option>
+            <option>Phone / Email / Text (multiple attempts)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contact Result</label>
+          <select id="ci-result" onchange="onCiResultChange()">
+            <option value="successful">Successful – Client Reached</option>
+            <option value="unsuccessful">Unsuccessful – Unable to Reach</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Employment Status Reported</label>
+          <select id="ci-empstatus">
+            <option value="">-- Select --</option>
+            <option>Unemployed – Actively Seeking Employment</option>
+            <option>Unemployed – Not Currently Seeking</option>
+            <option>Employed Full-Time</option>
+            <option>Employed Part-Time</option>
+            <option>Underemployed – Seeking Better Opportunity</option>
+            <option>Starting New Position Soon</option>
+            <option>Unknown – Unable to Reach Client</option>
+          </select>
+        </div>
+      </div>
+      <!-- Successful check-in fields -->
+      <div id="ci-success-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Job Search Activity Level</label>
+            <select id="ci-activity">
+              <option value="">-- Select --</option>
+              <option>Active – Applying and Interviewing Regularly</option>
+              <option>Active – Applying but No Interviews Yet</option>
+              <option>Moderate – Occasional Applications Submitted</option>
+              <option>Low – Limited Activity Reported</option>
+              <option>On Hold – Pending Resolution of Barrier</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Barrier(s) Reviewed</label>
+            <select id="ci-barrier">
+              <option value="">None Identified</option>
+              <option>Service-Connected Disability</option>
+              <option>Service-Connected Disability and Transportation</option>
+              <option>Transportation</option>
+              <option>Financial Hardship</option>
+              <option>Certification / Licensing Issue</option>
+              <option>Limited Work History</option>
+              <option>Criminal Background</option>
+              <option>Childcare / Dependent Care</option>
+              <option>Housing Instability</option>
+              <option>Mental Health / Behavioral Health</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group full">
+            <label>Discussion Summary</label>
+            <textarea id="ci-discussion" placeholder="Summarize what was discussed during this check-in (job leads, goals, concerns, referrals made, etc.)..."></textarea>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Job Leads / Resources Provided</label>
+            <textarea id="ci-leads" placeholder="List any job leads, referrals, or resources shared..."></textarea>
+          </div>
+          <div class="form-group">
+            <label>Veteran Action Items</label>
+            <textarea id="ci-vet-action" placeholder="What is the veteran expected to do before next contact?"></textarea>
+          </div>
+        </div>
+      </div>
+      <!-- Unsuccessful check-in notice -->
+      <div id="ci-fail-fields" class="hidden">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Attempts Made</label>
+            <select id="ci-attempts">
+              <option value="1 contact attempt was made">1 attempt</option>
+              <option value="2 contact attempts were made">2 attempts</option>
+              <option value="3 contact attempts were made">3 attempts</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Methods Tried</label>
+            <select id="ci-methods-tried">
+              <option value="phone">Phone only</option>
+              <option value="phone and email">Phone and email</option>
+              <option value="phone, email, and text">Phone, email, and text</option>
+              <option value="email only">Email only</option>
+              <option value="phone and text">Phone and text</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Voicemail Left?</label>
+            <select id="ci-vm">
+              <option value="A voicemail was left requesting a return call.">Yes – VM left</option>
+              <option value="No voicemail was available.">No – no VM available</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Email Sent?</label>
+            <select id="ci-email-sent">
+              <option value="">No</option>
+              <option value="An email was sent to the veteran's address on file requesting a return contact.">Yes – email sent</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <hr class="dv"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Next Follow-Up Date</label>
+          <input type="date" id="ci-next-date"/>
+        </div>
+        <div class="form-group">
+          <label>Next Contact Method</label>
+          <select id="ci-next-method">
+            <option>Phone</option>
+            <option>Email</option>
+            <option>Text Messaging</option>
+            <option>Phone / Email / Text</option>
+            <option>In-Person Appointment</option>
+            <option>Virtual (Teams / Zoom)</option>
+          </select>
+        </div>
+      </div>
+    </div><!-- /card-checkin -->
+
+    <!-- ── SUCCESSFUL CONTACT FIELDS ── -->
+    <div class="card hidden accent-green" id="card-success">
+      <div class="card-title"><span class="ct-dot"></span> Successful Contact Details</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Contact Method</label>
+          <select id="sc-method">
+            <option>Phone</option>
+            <option>In-Person Appointment</option>
+            <option>Email</option>
+            <option>Text Messaging</option>
+            <option>Virtual (Teams / Zoom)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Duration / Length</label>
+          <select id="sc-duration">
+            <option value="">-- Select --</option>
+            <option>less than 5 minutes</option>
+            <option>approximately 5–10 minutes</option>
+            <option>approximately 10–15 minutes</option>
+            <option>approximately 15–20 minutes</option>
+            <option>approximately 20–30 minutes</option>
+            <option>over 30 minutes</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Contact Purpose</label>
+          <select id="sc-purpose">
+            <option value="Bi-Weekly Follow-Up">Bi-Weekly Follow-Up</option>
+            <option value="30-Day Follow-Up">30-Day Follow-Up</option>
+            <option value="90-Day Follow-Up">90-Day Follow-Up</option>
+            <option value="IEP Review">IEP Review</option>
+            <option value="Employment Verification">Employment Verification</option>
+            <option value="Intake / Enrollment">Intake / Enrollment</option>
+            <option value="Re-Engagement">Re-Engagement</option>
+            <option value="Referral Follow-Up">Referral Follow-Up</option>
+            <option value="General Case Management">General Case Management</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Employment Status Reported</label>
+          <select id="sc-empstatus">
+            <option value="">-- Select --</option>
+            <option>Unemployed – Actively Seeking Employment</option>
+            <option>Unemployed – Not Currently Seeking</option>
+            <option>Employed Full-Time</option>
+            <option>Employed Part-Time</option>
+            <option>Underemployed – Seeking Better Opportunity</option>
+            <option>Starting New Position Soon</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Client Disposition</label>
+          <select id="sc-disposition">
+            <option value="">-- Select --</option>
+            <option>Cooperative and engaged</option>
+            <option>Motivated and actively participating</option>
+            <option>Cooperative but brief</option>
+            <option>Expressed frustration with job search</option>
+            <option>Positive – recently employed</option>
+            <option>Requested additional resources</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Job Search Activity</label>
+          <select id="sc-activity">
+            <option value="">-- Select --</option>
+            <option>Active – Applying and Interviewing Regularly</option>
+            <option>Active – Applying but No Interviews Yet</option>
+            <option>Moderate – Occasional Applications Submitted</option>
+            <option>Low – Limited Activity Reported</option>
+            <option>On Hold – Pending Resolution of Barrier</option>
+            <option>N/A – Client is Employed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Barrier(s) Identified</label>
+          <select id="sc-barrier">
+            <option value="">None Identified</option>
+            <option>Service-Connected Disability</option>
+            <option>Service-Connected Disability and Transportation</option>
+            <option>Transportation</option>
+            <option>Financial Hardship</option>
+            <option>Certification / Licensing Issue</option>
+            <option>Limited Work History</option>
+            <option>Criminal Background</option>
+            <option>Childcare / Dependent Care</option>
+            <option>Housing Instability</option>
+            <option>Mental Health / Behavioral Health</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group full">
+          <label>Discussion / Assessment Summary</label>
+          <textarea id="sc-discussion" placeholder="Detail what was discussed: employment updates, concerns, goals, job search activity, resources shared, referrals made..." style="min-height:80px;"></textarea>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Services / Resources Provided</label>
+          <textarea id="sc-services" placeholder="List services or resources provided during this contact..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Action Items (Veteran)</label>
+          <textarea id="sc-vet-action" placeholder="What is the veteran expected to do next?"></textarea>
+        </div>
+      </div>
+      <hr class="dv"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Next Follow-Up Date</label>
+          <input type="date" id="sc-next-date"/>
+        </div>
+        <div class="form-group">
+          <label>Next Contact Method</label>
+          <select id="sc-next-method">
+            <option>Phone</option>
+            <option>Email</option>
+            <option>Text Messaging</option>
+            <option>Phone / Email / Text</option>
+            <option>In-Person Appointment</option>
+            <option>Virtual (Teams / Zoom)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Case Manager Action Items</label>
+          <input type="text" id="sc-cm-action" placeholder="What will CM do before next contact?"/>
+        </div>
+      </div>
+    </div><!-- /card-success -->
+
+    <!-- ── UNSUCCESSFUL CONTACT FIELDS ── -->
+    <div class="card hidden accent-red" id="card-unsuccessful">
+      <div class="card-title"><span class="ct-dot"></span> Unsuccessful Contact Details</div>
+      <div class="notice" style="margin-bottom:12px;">All attempts below will be listed in the generated note. Add every method tried before marking contact as unsuccessful.</div>
+
+      <!-- Attempt entries -->
+      <div id="attempt-container"></div>
+      <button class="btn btn-ghost btn-sm" onclick="addAttempt()" style="margin-bottom:12px;">+ Add Attempt</button>
+
+      <hr class="dv"/>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Reason for Contact (Purpose)</label>
+          <select id="uc-purpose">
+            <option value="Bi-Weekly Follow-Up">Bi-Weekly Follow-Up</option>
+            <option value="30-Day Follow-Up">30-Day Follow-Up</option>
+            <option value="90-Day Follow-Up">90-Day Follow-Up</option>
+            <option value="Re-Engagement Outreach">Re-Engagement Outreach</option>
+            <option value="Scheduled Appointment Reminder">Scheduled Appointment Reminder</option>
+            <option value="Job Lead / Resource Follow-Up">Job Lead / Resource Follow-Up</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Plan if Still No Contact</label>
+          <select id="uc-plan">
+            <option value="Case manager will continue scheduled outreach attempts via all available contact methods.">Continue Scheduled Outreach</option>
+            <option value="Case manager will escalate to supervisor if contact is not re-established within the next follow-up cycle.">Escalate to Supervisor</option>
+            <option value="Case manager will review file and attempt alternative contact method.">Try Alternative Contact Method</option>
+            <option value="Case manager will initiate case closure process if contact is not re-established within 30 days.">Initiate Closure Process</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Next Outreach Date</label>
+          <input type="date" id="uc-next-date"/>
+        </div>
+        <div class="form-group">
+          <label>Additional Notes</label>
+          <input type="text" id="uc-notes" placeholder="Any additional context..."/>
+        </div>
+      </div>
+    </div><!-- /card-unsuccessful -->
+
+    <!-- ── GENERATE BUTTON ── -->
+    <div class="hidden" id="generate-row">
+      <div class="btn-row">
+        <button class="btn btn-gold" id="generate-btn" onclick="generateNote()">⚡ Generate Case Note</button>
+        <button class="btn btn-ghost" onclick="clearAll()">↺ Clear All</button>
+      </div>
+    </div>
+
+  </div><!-- /col-form -->
+
+  <!-- ───────────────── RIGHT: OUTPUT ───────────────── -->
+  <div class="col-output">
+    <div class="card">
+      <div class="output-top">
+        <div>
+          <div class="card-title" style="margin-bottom:0;border:none;padding:0;"><span class="ct-dot"></span> Generated Case Note</div>
+          <div style="font-size:0.7rem;color:#8892b0;margin-top:3px;">Jobs4TN / VOS ready — copy and paste directly</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="output-tag hidden" id="output-tag">—</span>
+          <button class="copy-btn hidden" id="copy-btn" onclick="copyNote()">Copy to Clipboard</button>
+        </div>
+      </div>
+      <br/>
+      <div id="output-area" class="output-area">
+        <span class="output-placeholder">Your case note will appear here after you fill out the form and click Generate Case Note.</span>
+      </div>
+      <div class="char-count" id="char-count"></div>
+    </div>
+
+    <!-- Quick Reference -->
+    <div class="card">
+      <div class="card-title"><span class="ct-dot"></span> Quick Reference – Contact Outcomes</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#e6f4ed;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:0.72rem;font-weight:800;color:var(--green);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">✅ Successful</div>
+          <div style="font-size:0.76rem;color:#333;line-height:1.6;">Veteran answered call<br>In-person appointment conducted<br>Email exchange completed<br>Text exchange confirmed<br>Virtual meeting completed</div>
+        </div>
+        <div style="background:#fdecea;border-radius:8px;padding:10px 12px;">
+          <div style="font-size:0.72rem;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🚫 Unsuccessful</div>
+          <div style="font-size:0.76rem;color:#333;line-height:1.6;">No answer – voicemail left<br>No answer – no VM available<br>Phone disconnected / not in service<br>Email sent – no response<br>Text sent – no response<br>No-show for appointment</div>
+        </div>
+      </div>
+      <hr class="dv"/>
+      <div style="font-size:0.74rem;color:#8892b0;line-height:1.6;">
+        <strong style="color:var(--navy);">Days W/O Contact &gt; 14</strong> = Follow-Up Required &nbsp;·&nbsp;
+        <strong style="color:var(--navy);">Bi-Weekly</strong> = every 14 days &nbsp;·&nbsp;
+        <strong style="color:var(--navy);">30/90-Day</strong> = milestone checks
+      </div>
+    </div>
+  </div><!-- /col-output -->
+
+</div><!-- /main -->
+
+<!-- ═══════════════════════════ JSON PANEL ═══════════════════════════ -->
+<div class="json-overlay" id="json-overlay">
+  <div class="json-modal">
+    <div class="json-modal-hdr">
+      <div>
+        <h2>{ } JSON — Case Note Data</h2>
+        <p>Load a veteran profile, export the current form, or manage saved profiles</p>
+      </div>
+      <button class="json-close-btn" onclick="closeJsonPanel()">✕</button>
+    </div>
+    <div class="json-tabs">
+      <button class="json-tab active" onclick="switchJsonTab('load',this)">⬇ Load / Pre-fill</button>
+      <button class="json-tab" onclick="switchJsonTab('export',this)">⬆ Export Current</button>
+      <button class="json-tab" onclick="switchJsonTab('profiles',this)">👤 Saved Profiles</button>
+    </div>
+    <div class="json-body">
+
+      <!-- LOAD TAB -->
+      <div id="jpane-load">
+        <div class="json-hint">
+          Paste a JSON object to pre-fill the form. Supported fields:<br>
+          <code>veteranName</code>, <code>stateId</code>, <code>caseManager</code>, <code>location</code>,
+          <code>serviceCode</code>, <code>scenario</code>, <code>date</code>,
+          <code>checkInType</code>, <code>contactMethod</code>, <code>employmentStatus</code>,
+          <code>jobSearchActivity</code>, <code>barrier</code>, <code>discussion</code>,
+          <code>veteranActionItems</code>, <code>nextFollowUpDate</code>, <code>nextFollowUpMethod</code>
+        </div>
+        <textarea class="json-editor" id="json-load-editor" placeholder='{
+  "veteranName": "Smith, John",
+  "stateId": "1234567",
+  "caseManager": "Mario McMichael",
+  "location": "Clarksville American Job Center",
+  "serviceCode": "200 – Staff Assisted / Follow-Up",
+  "scenario": "checkin",
+  "checkInType": "Bi-Weekly Follow-Up",
+  "contactMethod": "Phone",
+  "employmentStatus": "Unemployed – Actively Seeking Employment",
+  "discussion": "Veteran reports actively applying..."
+}'></textarea>
+        <div id="json-load-status" class="json-status"></div>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJsonPanel()">Cancel</button>
+          <button class="btn btn-sm btn-ghost" onclick="saveAsProfile()" title="Save this JSON as a profile">💾 Save as Profile</button>
+          <button class="btn btn-teal" onclick="applyJson()" style="background:var(--teal);color:#fff;padding:9px 18px;border-radius:8px;font-size:0.84rem;font-weight:700;cursor:pointer;border:none;">Apply to Form</button>
+        </div>
+      </div>
+
+      <!-- EXPORT TAB -->
+      <div id="jpane-export" style="display:none;">
+        <div class="json-hint">
+          Current form state exported as JSON — copy to save as a profile or share with another system.
+          Re-paste into <strong>Load / Pre-fill</strong> to restore this form later.
+        </div>
+        <textarea class="json-editor json-editor[readonly]" id="json-export-editor" readonly></textarea>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJsonPanel()">Close</button>
+          <button class="btn btn-sm btn-ghost" onclick="saveExportAsProfile()">💾 Save as Profile</button>
+          <button class="btn" onclick="copyExport()" style="background:var(--teal);color:#fff;padding:9px 18px;border-radius:8px;font-size:0.84rem;font-weight:700;cursor:pointer;border:none;" id="export-copy-btn">Copy to Clipboard</button>
+        </div>
+      </div>
+
+      <!-- PROFILES TAB -->
+      <div id="jpane-profiles" style="display:none;">
+        <div class="json-hint">
+          Saved veteran profiles — click <strong>Load</strong> to pre-fill the form, or <strong>Delete</strong> to remove. Profiles are stored in memory for this session.
+        </div>
+        <div class="profile-list" id="profile-list"></div>
+        <div class="json-actions">
+          <button class="btn btn-ghost" onclick="closeJsonPanel()">Close</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════
+let currentScenario = null;
+let attemptCount = 0;
+
+const SCENARIO_META = {
+  outbound:     { label:'Outbound Call',       icon:'📞', alertClass:'alert-blue',  tagClass:'tag-blue',  tagText:'Outbound Call'       },
+  checkin:      { label:'Check-In',            icon:'📋', alertClass:'alert-teal',  tagClass:'tag-teal',  tagText:'Check-In'            },
+  success:      { label:'Successful Contact',  icon:'✅', alertClass:'alert-green', tagClass:'tag-green', tagText:'Successful Contact'  },
+  unsuccessful: { label:'Unsuccessful Contact',icon:'🚫', alertClass:'alert-red',   tagClass:'tag-red',   tagText:'Unsuccessful Contact'},
+};
+const SCENARIO_CARDS = { outbound:'card-outbound', checkin:'card-checkin', success:'card-success', unsuccessful:'card-unsuccessful' };
+
+// ════════════════════════════════════════════════
+// SCENARIO SWITCHING
+// ════════════════════════════════════════════════
+function setScenario(name, cardEl) {
+  currentScenario = name;
+
+  // Highlight selected card
+  document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('active'));
+  cardEl.classList.add('active');
+
+  // Show shared header
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('card-header').classList.remove('hidden');
+  document.getElementById('generate-row').classList.remove('hidden');
+
+  // Show/hide scenario cards
+  Object.entries(SCENARIO_CARDS).forEach(([key, id]) => {
+    const el = document.getElementById(id);
+    key === name ? el.classList.remove('hidden') : el.classList.add('hidden');
+  });
+
+  // Scenario alert
+  const meta = SCENARIO_META[name];
+  const alertEl = document.getElementById('scenario-alert');
+  alertEl.className = `scenario-alert ${meta.alertClass}`;
+  alertEl.innerHTML = `${meta.icon} <strong>${meta.label}</strong> — fill in the details below, then click Generate.`;
+  alertEl.classList.remove('hidden');
+
+  // Init attempts if unsuccessful
+  if (name === 'unsuccessful' && attemptCount === 0) addAttempt();
+
+  setToday();
+}
+
+function setToday() {
+  const today = new Date().toISOString().slice(0,10);
+  ['h-date','ci-next-date','sc-next-date','uc-next-date'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.value) el.value = today;
+  });
+}
+
+// ════════════════════════════════════════════════
+// OUTBOUND OUTCOME
+// ════════════════════════════════════════════════
+function onOutcomeChange(prefix) {
+  const val = document.querySelector(`input[name="${prefix}-outcome"]:checked`)?.value;
+  const reachedFields = document.getElementById(`${prefix}-reached-fields`);
+
+  document.querySelectorAll(`#${prefix}-outcome-grid .outcome-opt`).forEach(opt => {
+    const radio = opt.querySelector('input[type=radio]');
+    opt.classList.remove('selected-success','selected-fail');
+    if (radio.checked) {
+      opt.classList.add(radio.value === 'reached' ? 'selected-success' : 'selected-fail');
+    }
+  });
+
+  if (reachedFields) {
+    val === 'reached' ? reachedFields.classList.remove('hidden') : reachedFields.classList.add('hidden');
+  }
+}
+
+// ════════════════════════════════════════════════
+// CHECK-IN RESULT TOGGLE
+// ════════════════════════════════════════════════
+function onCiResultChange() {
+  const val = document.getElementById('ci-result').value;
+  document.getElementById('ci-success-fields').classList.toggle('hidden', val !== 'successful');
+  document.getElementById('ci-fail-fields').classList.toggle('hidden', val !== 'unsuccessful');
+}
+
+// ════════════════════════════════════════════════
+// UNSUCCESSFUL ATTEMPTS
+// ════════════════════════════════════════════════
+function addAttempt() {
+  attemptCount++;
+  const n = attemptCount;
+  const div = document.createElement('div');
+  div.id = `attempt-${n}`;
+  div.style.cssText = 'background:#fafbfc;border:1.5px solid #edf0f7;border-radius:8px;padding:14px;margin-bottom:10px;';
+  div.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:0.73rem;font-weight:800;color:var(--red);text-transform:uppercase;letter-spacing:0.5px;">Attempt ${n}</span>
+      ${n > 1 ? `<button onclick="removeAttempt(${n})" style="background:none;border:1px solid #e53e3e;color:#e53e3e;border-radius:5px;padding:3px 9px;font-size:0.72px;cursor:pointer;font-weight:700;font-size:0.72rem;">Remove</button>` : ''}
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:120px;display:flex;flex-direction:column;">
+        <label style="font-size:0.68rem;font-weight:700;color:#5a6a80;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Date</label>
+        <input type="date" id="att-${n}-date" style="border:1.5px solid #cdd5e0;border-radius:7px;padding:7px 9px;font-size:0.83rem;background:#fff;"/>
+      </div>
+      <div style="flex:1;min-width:120px;display:flex;flex-direction:column;">
+        <label style="font-size:0.68rem;font-weight:700;color:#5a6a80;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Time</label>
+        <input type="time" id="att-${n}-time" style="border:1.5px solid #cdd5e0;border-radius:7px;padding:7px 9px;font-size:0.83rem;background:#fff;"/>
+      </div>
+      <div style="flex:1;min-width:140px;display:flex;flex-direction:column;">
+        <label style="font-size:0.68rem;font-weight:700;color:#5a6a80;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Method</label>
+        <select id="att-${n}-method" style="border:1.5px solid #cdd5e0;border-radius:7px;padding:7px 9px;font-size:0.83rem;background:#fff;cursor:pointer;">
+          <option>Phone</option>
+          <option>Email</option>
+          <option>Text Messaging</option>
+          <option>In-Person Visit</option>
+        </select>
+      </div>
+      <div style="flex:2;min-width:160px;display:flex;flex-direction:column;">
+        <label style="font-size:0.68rem;font-weight:700;color:#5a6a80;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;">Outcome</label>
+        <select id="att-${n}-outcome" style="border:1.5px solid #cdd5e0;border-radius:7px;padding:7px 9px;font-size:0.83rem;background:#fff;cursor:pointer;">
+          <option value="No answer; voicemail left requesting return call.">No Answer – Voicemail Left</option>
+          <option value="No answer; no voicemail option available.">No Answer – No Voicemail</option>
+          <option value="Phone appears disconnected or not in service.">Phone Disconnected / Not in Service</option>
+          <option value="Email sent; no response received to date.">Email Sent – No Response</option>
+          <option value="Text sent; no response received to date.">Text Sent – No Response</option>
+          <option value="Veteran did not appear for scheduled appointment.">No-Show for Appointment</option>
+          <option value="Left message with household member requesting callback.">Left Message with Household Member</option>
+        </select>
+      </div>
+    </div>
+  `;
+  document.getElementById('attempt-container').appendChild(div);
+  // Set today's date
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById(`att-${n}-date`).value = today;
+}
+
+function removeAttempt(n) {
+  const el = document.getElementById(`attempt-${n}`);
+  if (el) el.remove();
+}
+
+// ════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════
+const SEP = '─'.repeat(58);
+function v(id) { return (document.getElementById(id)?.value || '').trim(); }
+function fmtDate(s) {
+  if (!s) return '[DATE]';
+  const d = new Date(s + 'T00:00:00');
+  return d.toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+}
+function fmtTime(s) {
+  if (!s) return '';
+  const [h,m] = s.split(':');
+  const hr = parseInt(h);
+  return `${(hr%12)||12}:${m} ${hr>=12?'PM':'AM'}`;
+}
+function getLocation() {
+  const sel = v('h-location');
+  return (sel === 'OTHER' || !sel) ? (v('h-location-other') || '[AJC LOCATION]') : sel;
+}
+
+// ════════════════════════════════════════════════
+// GENERATE
+// ════════════════════════════════════════════════
+function generateNote() {
+  if (!currentScenario) { alert('Please select a contact scenario first.'); return; }
+
+  let note = '';
+  const date   = fmtDate(v('h-date'));
+  const time   = fmtTime(v('h-time'));
+  const cm     = v('h-cm') || 'Mario McMichael';
+  const vet    = v('h-vet');
+  const stateId= v('h-id');
+  const svc    = v('h-svc');
+  const loc    = getLocation();
+  const dtLine = time ? `${date} at ${time}` : date;
+
+  const meta = SCENARIO_META[currentScenario];
+
+  // ── Common header block ──
+  note += `SERVICE CODE: ${svc}\n`;
+  note += `DATE OF CONTACT: ${dtLine}\n`;
+  note += `CONTACT TYPE: ${meta.label.toUpperCase()}\n`;
+  note += `LOCATION: ${loc}\n`;
+  note += `CASE MANAGER: ${cm}\n`;
+  if (vet)     note += `VETERAN: ${vet}\n`;
+  if (stateId) note += `STATE ID: ${stateId}\n`;
+  note += `PROGRAM: JVSG DVOP\n`;
+  note += `\n${SEP}\n\n`;
+
+  // ── Scenario-specific body ──
+  if      (currentScenario === 'outbound')     note += buildOutbound(date, time, cm, vet);
+  else if (currentScenario === 'checkin')      note += buildCheckin(date, cm, vet);
+  else if (currentScenario === 'success')      note += buildSuccess(date, cm, vet);
+  else if (currentScenario === 'unsuccessful') note += buildUnsuccessful(date, cm, vet);
+
+  note += `\n${SEP}\n\nCASE STATUS: Active DVOP Case Management\n`;
+
+  // Render
+  document.getElementById('output-area').innerText = note;
+  document.getElementById('char-count').textContent = `${note.length.toLocaleString()} characters`;
+
+  const tag = document.getElementById('output-tag');
+  tag.className = `output-tag ${meta.tagClass}`;
+  tag.textContent = meta.tagText;
+  tag.classList.remove('hidden');
+
+  document.getElementById('copy-btn').classList.remove('hidden');
+  resetCopyBtn();
+  document.getElementById('output-area').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ── OUTBOUND CALL ─────────────────────────────
+function buildOutbound(date, time, cm, vet) {
+  const phone      = v('ob-phone');
+  const numType    = v('ob-numtype');
+  const attempts   = v('ob-attempts');
+  const outcome    = document.querySelector('input[name="ob-outcome"]:checked')?.value;
+  const duration   = v('ob-duration');
+  const disposition= v('ob-disposition');
+  const emailAfter = v('ob-email-after');
+  const textAfter  = v('ob-text-after');
+  const notes      = v('ob-notes');
+
+  let n = `OUTBOUND CALL LOG\n\n`;
+  n += `Case manager initiated an outbound phone call `;
+  if (vet) n += `to ${vet} `;
+  n += `as part of ongoing DVOP case management.\n\n`;
+
+  n += `  Phone Number Dialed: ${phone || '[NUMBER ON FILE]'} (${numType})\n`;
+  n += `  Number of Attempts: ${attempts}\n`;
+  n += `  Date / Time: ${date}${time ? ' at ' + time : ''}\n\n`;
+
+  if (!outcome || outcome === 'vm') {
+    n += `CALL OUTCOME\n\n`;
+    n += `Unsuccessful Contact – `;
+    if (!outcome || outcome === 'vm') {
+      n += `No answer. Voicemail was left at the number on file requesting the veteran return the call at their earliest convenience and reference their DVOP case number.\n`;
+    }
+  } else if (outcome === 'novm') {
+    n += `CALL OUTCOME\n\nUnsuccessful Contact – No answer. No voicemail option was available at the number on file. Case manager was unable to leave a message.\n`;
+  } else if (outcome === 'disconnected') {
+    n += `CALL OUTCOME\n\nUnsuccessful Contact – The phone number on file appears to be disconnected or no longer in service. Case manager was unable to complete the call.\n`;
+  } else if (outcome === 'reached') {
+    n += `CALL OUTCOME\n\nSuccessful Contact – Veteran answered the call.\n`;
+    if (duration)    n += `  Duration: Call lasted ${duration}.\n`;
+    if (disposition) n += `  Client Disposition: ${disposition}.\n`;
+  }
+
+  if (emailAfter === 'yes') {
+    n += `\nFOLLOW-UP EMAIL: A follow-up email was sent to the veteran's address on file after this call to confirm information discussed and provide any additional resources.\n`;
+  }
+  if (textAfter === 'yes') {
+    n += `\nFOLLOW-UP TEXT: A follow-up text message was sent to the veteran's number on file after this call.\n`;
+  }
+  if (notes) {
+    n += `\nADDITIONAL NOTES\n\n${notes}\n`;
+  }
+
+  n += `\n${SEP}\n\nNEXT STEPS\n\nCase manager will continue scheduled follow-up outreach and document all contact attempts in the veteran's case file per DVOP program requirements.\n`;
+  return n;
+}
+
+// ── CHECK-IN ──────────────────────────────────
+function buildCheckin(date, cm, vet) {
+  const type        = v('ci-type');
+  const method      = v('ci-method');
+  const result      = v('ci-result');
+  const empStatus   = v('ci-empstatus');
+  const activity    = v('ci-activity');
+  const barrier     = v('ci-barrier');
+  const discussion  = v('ci-discussion');
+  const leads       = v('ci-leads');
+  const vetAction   = v('ci-vet-action');
+  const nextDate    = fmtDate(v('ci-next-date'));
+  const nextMethod  = v('ci-next-method');
+  const attempts    = v('ci-attempts');
+  const methodsTried= v('ci-methods-tried');
+  const vm          = v('ci-vm');
+  const emailSent   = v('ci-email-sent');
+
+  let n = `${type.toUpperCase()}\n\n`;
+
+  if (result === 'successful') {
+    n += `Case manager conducted a ${type.toLowerCase()} with `;
+    n += vet ? `${vet} ` : 'the veteran ';
+    n += `via ${method} as part of ongoing DVOP case management services.\n\n`;
+    n += `${SEP}\n\nDISCUSSION / ASSESSMENT\n\n`;
+    if (empStatus) n += `Employment Status: ${empStatus}\n`;
+    if (activity)  n += `Job Search Activity: ${activity}\n`;
+    if (barrier && barrier !== 'None Identified') n += `Barriers Reviewed: ${barrier}\n`;
+    n += '\n';
+    if (discussion) {
+      n += `${discussion}\n`;
+    } else {
+      n += `During this ${type.toLowerCase()}, the veteran provided an update on their current employment status and ongoing job search efforts. The veteran remains engaged in the job search process and receptive to guidance and resources provided by DVOP staff.\n`;
+    }
+    if (leads) {
+      n += `\n${SEP}\n\nJOB LEADS / RESOURCES PROVIDED\n\n${leads}\n`;
+    }
+    n += `\n${SEP}\n\nNEXT STEPS\n\n`;
+    if (vetAction) {
+      n += `Veteran Action Items:\n${vetAction}\n\n`;
+    } else {
+      n += `Veteran Action Items:\nVeteran will continue applying to identified positions, follow up with employers, and utilize employment resources provided.\n\n`;
+    }
+    n += `Case Manager Action Items:\nCase manager will continue scheduled ${type.toLowerCase()} outreach and monitor veteran's progress toward employment goals.\n`;
+    n += `\n${SEP}\n\nFOLLOW-UP PLAN\n\n`;
+    n += `Next Scheduled Contact: ${nextDate} via ${nextMethod}\n`;
+  } else {
+    // Unsuccessful check-in
+    n += `Case manager initiated a ${type.toLowerCase()} `;
+    n += vet ? `for ${vet} ` : '';
+    n += `via ${methodsTried}. All contact attempts were unsuccessful.\n\n`;
+    n += `${SEP}\n\nCONTACT ATTEMPTS\n\n`;
+    n += `  ${attempts} via ${methodsTried}.\n`;
+    n += `  ${vm}\n`;
+    if (emailSent) n += `  ${emailSent}\n`;
+    n += `\n${SEP}\n\nNEXT STEPS\n\n`;
+    n += `${v('uc-plan') || 'Case manager will continue scheduled outreach attempts via all available contact methods.'}\n`;
+    n += `\nNext Outreach Attempt: ${nextDate} via ${nextMethod}\n`;
+  }
+  return n;
+}
+
+// ── SUCCESSFUL CONTACT ────────────────────────
+function buildSuccess(date, cm, vet) {
+  const method      = v('sc-method');
+  const duration    = v('sc-duration');
+  const purpose     = v('sc-purpose');
+  const empStatus   = v('sc-empstatus');
+  const disposition = v('sc-disposition');
+  const activity    = v('sc-activity');
+  const barrier     = v('sc-barrier');
+  const discussion  = v('sc-discussion');
+  const services    = v('sc-services');
+  const vetAction   = v('sc-vet-action');
+  const cmAction    = v('sc-cm-action');
+  const nextDate    = fmtDate(v('sc-next-date'));
+  const nextMethod  = v('sc-next-method');
+
+  let n = `SUCCESSFUL CONTACT – ${purpose.toUpperCase()}\n\n`;
+  n += `Successful contact was made with `;
+  n += vet ? `${vet} ` : 'the veteran ';
+  n += `via ${method}`;
+  if (duration) n += `, lasting ${duration}`;
+  n += `. Contact was made as part of ongoing DVOP ${purpose.toLowerCase()} and case management services.\n\n`;
+  n += `${SEP}\n\nDISCUSSION / ASSESSMENT\n\n`;
+  if (empStatus)   n += `Employment Status: ${empStatus}\n`;
+  if (activity)    n += `Job Search Activity: ${activity}\n`;
+  if (barrier && barrier !== 'None Identified') n += `Barrier(s) Identified: ${barrier}\n`;
+  if (disposition) n += `Client Disposition: ${disposition}\n`;
+  n += '\n';
+
+  if (discussion) {
+    n += `${discussion}\n`;
+  } else {
+    n += `During this ${purpose.toLowerCase()}, the veteran provided a current update on their employment status and job search activities. The veteran demonstrated engagement and motivation toward achieving stated employment goals. Barriers to employment were reviewed and appropriate services and resources were discussed. Veteran remains responsive to DVOP case management support.\n`;
+  }
+
+  if (services) {
+    n += `\n${SEP}\n\nSERVICES / RESOURCES PROVIDED\n\n${services}\n`;
+  }
+
+  n += `\n${SEP}\n\nNEXT STEPS\n\n`;
+  n += `Veteran Action Items:\n`;
+  n += vetAction || 'Veteran will continue applying to identified positions, attend any scheduled interviews, and follow up with employers as directed.';
+  n += '\n\n';
+  n += `Case Manager Action Items:\n`;
+  n += cmAction || 'Case manager will continue scheduled follow-up contact, monitor job search activity, and provide additional resources as needed.';
+  n += '\n';
+  n += `\n${SEP}\n\nFOLLOW-UP PLAN\n\nNext Scheduled Contact: ${nextDate} via ${nextMethod}\n`;
+  return n;
+}
+
+// ── UNSUCCESSFUL CONTACT ──────────────────────
+function buildUnsuccessful(date, cm, vet) {
+  const purpose = v('uc-purpose');
+  const plan    = v('uc-plan');
+  const nextDate= fmtDate(v('uc-next-date'));
+  const notes   = v('uc-notes');
+
+  let n = `UNSUCCESSFUL CONTACT – ${purpose.toUpperCase()}\n\n`;
+  n += `Case manager made multiple attempts to contact `;
+  n += vet ? `${vet} ` : 'the veteran ';
+  n += `as part of the scheduled ${purpose.toLowerCase()}. All contact attempts were unsuccessful.\n\n`;
+  n += `${SEP}\n\nCONTACT ATTEMPT LOG\n\n`;
+
+  let hasAttempts = false;
+  for (let i = 1; i <= attemptCount; i++) {
+    const attDate   = document.getElementById(`att-${i}-date`);
+    const attTime   = document.getElementById(`att-${i}-time`);
+    const attMethod = document.getElementById(`att-${i}-method`);
+    const attOutcome= document.getElementById(`att-${i}-outcome`);
+    if (!attDate) continue;
+    hasAttempts = true;
+    const dt = [fmtDate(attDate.value), fmtTime(attTime.value)].filter(Boolean).join(' at ');
+    n += `  Attempt ${i}\n`;
+    n += `  Date / Time: ${dt || '[INSERT DATE/TIME]'}\n`;
+    n += `  Method: ${attMethod?.value || '[METHOD]'}\n`;
+    n += `  Outcome: ${attOutcome?.value || '[OUTCOME]'}\n\n`;
+  }
+
+  if (!hasAttempts) {
+    n += `  [No attempts logged — add attempt details in the form.]\n\n`;
+  }
+
+  n += `${SEP}\n\nNEXT STEPS\n\n`;
+  n += `${plan || 'Case manager will continue scheduled outreach attempts via all available contact methods.'}\n`;
+  if (notes) n += `\nNotes: ${notes}\n`;
+  n += `\nNext Outreach Attempt: ${nextDate}\n`;
+  return n;
+}
+
+// ════════════════════════════════════════════════
+// COPY / CLEAR
+// ════════════════════════════════════════════════
+function copyNote() {
+  const text = document.getElementById('output-area').innerText;
+  if (!text || text.includes('Your case note will appear here')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2500);
+  });
+}
+function resetCopyBtn() {
+  const btn = document.getElementById('copy-btn');
+  if (btn) { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }
+}
+function clearAll() {
+  if (!confirm('Clear all form data?')) return;
+  document.querySelectorAll('input:not([type=radio]):not([type=checkbox]), select, textarea').forEach(el => {
+    if (el.id === 'h-cm') { el.value = 'Mario McMichael'; return; }
+    if (el.tagName === 'SELECT') el.selectedIndex = 0;
+    else el.value = '';
+  });
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  document.getElementById('output-area').innerHTML = '<span class="output-placeholder">Your case note will appear here after you fill out the form and click Generate Case Note.</span>';
+  document.getElementById('char-count').textContent = '';
+  document.getElementById('copy-btn').classList.add('hidden');
+  document.getElementById('output-tag').classList.add('hidden');
+  document.getElementById('attempt-container').innerHTML = '';
+  attemptCount = 0;
+  // Re-init attempt if unsuccessful still selected
+  if (currentScenario === 'unsuccessful') addAttempt();
+  // Hide reached fields / fail fields
+  document.getElementById('ob-reached-fields')?.classList.add('hidden');
+  document.getElementById('ci-fail-fields')?.classList.add('hidden');
+  document.querySelectorAll('.outcome-opt').forEach(o => o.classList.remove('selected-success','selected-fail'));
+  setToday();
+}
+
+// ════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  setToday();
+  document.getElementById('ci-fail-fields')?.classList.add('hidden');
+});
+
+// ════════════════════════════════════════════════
+// JSON PANEL
+// ════════════════════════════════════════════════
+let savedProfiles = [];
+
+function openJsonPanel() {
+  document.getElementById('jpane-load').style.display = 'block';
+  document.getElementById('jpane-export').style.display = 'none';
+  document.getElementById('jpane-profiles').style.display = 'none';
+  document.querySelectorAll('.json-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  clearJsonStatus('json-load-status');
+  document.getElementById('json-overlay').classList.add('open');
+}
+function closeJsonPanel() {
+  document.getElementById('json-overlay').classList.remove('open');
+}
+document.getElementById('json-overlay').addEventListener('click', function(e){ if(e.target===this) closeJsonPanel(); });
+
+function switchJsonTab(name, btn) {
+  ['load','export','profiles'].forEach(p => {
+    document.getElementById('jpane-'+p).style.display = p===name ? 'block' : 'none';
+  });
+  document.querySelectorAll('.json-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  if (name === 'export') buildExport();
+  if (name === 'profiles') renderProfiles();
+}
+
+// ── FIELD MAP: JSON key → element id (and optional setter) ──
+const FIELD_MAP = {
+  veteranName:        { id:'h-vet' },
+  stateId:            { id:'h-id' },
+  caseManager:        { id:'h-cm' },
+  serviceCode:        { id:'h-svc' },
+  date:               { id:'h-date' },
+  // location needs special handling
+  // scenario needs special handling
+  checkInType:        { id:'ci-type' },
+  contactMethod:      { id:'ci-method' },
+  contactResult:      { id:'ci-result',       after: onCiResultChange },
+  employmentStatus:   { ids:['ci-empstatus','sc-empstatus'] },
+  jobSearchActivity:  { ids:['ci-activity','sc-activity'] },
+  barrier:            { ids:['ci-barrier','sc-barrier'] },
+  discussion:         { ids:['ci-discussion','sc-discussion'] },
+  veteranActionItems: { ids:['ci-vet-action','sc-vet-action'] },
+  nextFollowUpDate:   { ids:['ci-next-date','sc-next-date','uc-next-date'] },
+  nextFollowUpMethod: { ids:['ci-next-method','sc-next-method'] },
+  contactPurpose:     { id:'sc-purpose' },
+  disposition:        { id:'sc-disposition' },
+  duration:           { id:'sc-duration' },
+  services:           { id:'sc-services' },
+  cmActionItems:      { id:'sc-cm-action' },
+  outboundPhone:      { id:'ob-phone' },
+  outboundNumType:    { id:'ob-numtype' },
+  ucPurpose:          { id:'uc-purpose' },
+  ucNotes:            { id:'uc-notes' },
+};
+
+function setField(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (el.tagName === 'SELECT') {
+    // try exact match first, then partial
+    const opts = Array.from(el.options);
+    const exact = opts.find(o => o.value === val || o.text === val);
+    if (exact) { el.value = exact.value; return; }
+    const partial = opts.find(o => o.text.toLowerCase().includes(val.toLowerCase()) || o.value.toLowerCase().includes(val.toLowerCase()));
+    if (partial) el.value = partial.value;
+  } else {
+    el.value = val;
+  }
+}
+
+function applyJson() {
+  const raw = document.getElementById('json-load-editor').value.trim();
+  const st  = document.getElementById('json-load-status');
+  if (!raw) { showJsonStatus(st, 'err', 'Paste JSON first.'); return; }
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { showJsonStatus(st, 'err', 'Invalid JSON: ' + e.message); return; }
+
+  // Location
+  if (data.location) {
+    const locSel = document.getElementById('h-location');
+    const opts = Array.from(locSel.options);
+    const match = opts.find(o => o.value === data.location || o.text === data.location);
+    if (match) { locSel.value = match.value; }
+    else { locSel.value = 'OTHER'; document.getElementById('h-location-other').value = data.location; }
+  }
+
+  // Scenario
+  if (data.scenario) {
+    const cards = { outbound:0, checkin:1, success:2, unsuccessful:3 };
+    const idx = cards[data.scenario.toLowerCase().replace(/[^a-z]/g,'')];
+    if (idx !== undefined) {
+      const card = document.querySelectorAll('.scenario-card')[idx];
+      if (card) setScenario(data.scenario.toLowerCase().replace(/[^a-z]/g,''), card);
+    }
+  }
+
+  // All mapped fields
+  Object.entries(FIELD_MAP).forEach(([key, cfg]) => {
+    if (data[key] === undefined) return;
+    if (cfg.ids) cfg.ids.forEach(id => setField(id, data[key]));
+    else if (cfg.id) setField(cfg.id, data[key]);
+    if (cfg.after) cfg.after();
+  });
+
+  // Trigger ci result change if contactResult was set
+  if (data.contactResult) onCiResultChange();
+
+  showJsonStatus(st, 'ok', '✓ Form pre-filled — review fields and generate your note.');
+  setTimeout(() => { clearJsonStatus('json-load-status'); closeJsonPanel(); }, 1400);
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+function buildExport() {
+  const locSel = document.getElementById('h-location');
+  const loc = locSel.value === 'OTHER' ? v('h-location-other') : locSel.value;
+
+  const data = {
+    exportedAt: new Date().toISOString().slice(0,16).replace('T',' '),
+    scenario: currentScenario || null,
+    veteranName: v('h-vet'),
+    stateId: v('h-id'),
+    caseManager: v('h-cm'),
+    location: loc,
+    serviceCode: v('h-svc'),
+    date: v('h-date'),
+    // check-in
+    checkInType: v('ci-type'),
+    contactMethod: v('ci-method'),
+    contactResult: v('ci-result'),
+    employmentStatus: v('ci-empstatus') || v('sc-empstatus'),
+    jobSearchActivity: v('ci-activity') || v('sc-activity'),
+    barrier: v('ci-barrier') || v('sc-barrier'),
+    discussion: v('ci-discussion') || v('sc-discussion'),
+    veteranActionItems: v('ci-vet-action') || v('sc-vet-action'),
+    nextFollowUpDate: v('ci-next-date') || v('sc-next-date') || v('uc-next-date'),
+    nextFollowUpMethod: v('ci-next-method') || v('sc-next-method'),
+    // successful
+    contactPurpose: v('sc-purpose'),
+    disposition: v('sc-disposition'),
+    duration: v('sc-duration'),
+    services: v('sc-services'),
+    cmActionItems: v('sc-cm-action'),
+    // outbound
+    outboundPhone: v('ob-phone'),
+    outboundNumType: v('ob-numtype'),
+    // unsuccessful
+    ucPurpose: v('uc-purpose'),
+    ucNotes: v('uc-notes'),
+  };
+  // Clean up empty strings
+  Object.keys(data).forEach(k => { if (data[k] === '') delete data[k]; });
+  document.getElementById('json-export-editor').value = JSON.stringify(data, null, 2);
+}
+
+function copyExport() {
+  const txt = document.getElementById('json-export-editor').value;
+  navigator.clipboard.writeText(txt).then(() => {
+    const btn = document.getElementById('export-copy-btn');
+    btn.textContent = 'Copied!'; btn.style.background = 'var(--green)';
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.style.background = 'var(--teal)'; }, 2000);
+  });
+}
+
+// ── PROFILES ──────────────────────────────────────────────────
+function saveAsProfile() {
+  const raw = document.getElementById('json-load-editor').value.trim();
+  if (!raw) { showJsonStatus(document.getElementById('json-load-status'), 'err', 'Paste JSON first to save as profile.'); return; }
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { showJsonStatus(document.getElementById('json-load-status'), 'err', 'Invalid JSON — fix errors before saving.'); return; }
+  const name = prompt('Profile name (e.g. veteran\'s name or case):');
+  if (!name) return;
+  savedProfiles.push({ name, data, saved: new Date().toLocaleDateString() });
+  showJsonStatus(document.getElementById('json-load-status'), 'ok', `✓ Profile "${name}" saved.`);
+}
+
+function saveExportAsProfile() {
+  buildExport();
+  const raw = document.getElementById('json-export-editor').value;
+  let data;
+  try { data = JSON.parse(raw); } catch(e) { return; }
+  const name = prompt('Profile name:');
+  if (!name) return;
+  savedProfiles.push({ name, data, saved: new Date().toLocaleDateString() });
+  alert(`Profile "${name}" saved. Switch to the Saved Profiles tab to load it.`);
+}
+
+function renderProfiles() {
+  const list = document.getElementById('profile-list');
+  if (savedProfiles.length === 0) {
+    list.innerHTML = '<div class="profile-empty">No saved profiles yet.<br>Use Load/Pre-fill or Export to save a profile.</div>';
+    return;
+  }
+  list.innerHTML = savedProfiles.map((p,i) => `
+    <div class="profile-item">
+      <div>
+        <div class="pi-name">${p.name}</div>
+        <div class="pi-sub">Saved ${p.saved}${p.data.scenario ? ' · ' + p.data.scenario : ''}</div>
+      </div>
+      <div class="pi-btns">
+        <button class="btn btn-sm" style="background:var(--teal);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;" onclick="loadProfile(${i})">Load</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProfile(${i})">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadProfile(i) {
+  const p = savedProfiles[i];
+  if (!p) return;
+  document.getElementById('json-load-editor').value = JSON.stringify(p.data, null, 2);
+  // Switch to load tab
+  switchJsonTab('load', document.querySelectorAll('.json-tab')[0]);
+  showJsonStatus(document.getElementById('json-load-status'), 'ok', `✓ Profile "${p.name}" loaded — click Apply to Form.`);
+}
+
+function deleteProfile(i) {
+  if (!confirm(`Delete profile "${savedProfiles[i].name}"?`)) return;
+  savedProfiles.splice(i, 1);
+  renderProfiles();
+}
+
+// ── STATUS HELPERS ────────────────────────────────────────────
+function showJsonStatus(el, type, msg) {
+  el.className = 'json-status ' + type;
+  el.textContent = msg;
+}
+function clearJsonStatus(id) {
+  const el = document.getElementById(id);
+  if (el) { el.className = 'json-status'; el.textContent = ''; }
+}
+</script>
+</body>
+</html>
