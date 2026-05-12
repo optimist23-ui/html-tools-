@@ -229,7 +229,23 @@ textarea.json-editor:focus{border-color:var(--teal);}
 <div id="user-html" class="card" style="margin:0 24px 18px;">
   <div class="card-title"><span class="ct-dot"></span> Custom HTML</div>
   <div class="notice">Add your custom HTML inside the <code>#user-html-content</code> container below.</div>
-  <div id="user-html-content"></div>
+  <div id="user-html-content">
+  <div class="notice" style="margin-top:10px;">Recent job leads loaded for Clarksville, TN.</div>
+  <div style="overflow-x:auto;margin-top:10px;">
+    <table id="job-leads-table" style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+      <thead>
+        <tr style="background:#f5f7fb;color:#2d3748;">
+          <th style="text-align:left;padding:8px;border:1px solid #e2e8f0;">Date</th>
+          <th style="text-align:left;padding:8px;border:1px solid #e2e8f0;">Job Title</th>
+          <th style="text-align:left;padding:8px;border:1px solid #e2e8f0;">Company</th>
+          <th style="text-align:left;padding:8px;border:1px solid #e2e8f0;">Location</th>
+          <th style="text-align:left;padding:8px;border:1px solid #e2e8f0;">Industry</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
 </div>
 
 <!-- ═══════════════════════════ MAIN LAYOUT ═══════════════════════════ -->
@@ -1338,9 +1354,43 @@ function clearAll() {
 // ════════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════════
+
+
+const uploadedJobLeads = {
+  "jobLeads": [
+    {"date":"2026-05-09","jobTitle":"Certified Pharmacy Technician PRN - Vanderbilt Hospital Clarksville","company":"Vanderbilt University Medical Center","location":"Clarksville, TN","industry":"Healthcare"},
+    {"date":"2026-05-09","jobTitle":"Home Health Physical Therapist PRN","company":"CenterWell","location":"Clarksville, TN","industry":"Healthcare"},
+    {"date":"2026-05-09","jobTitle":"Maintenance Technician","company":"Aerotek","location":"Clarksville, TN","industry":"Skilled Trades"},
+    {"date":"2026-05-09","jobTitle":"Flux Core Welder (Entry Level Welcome)","company":"Aerotek","location":"Clarksville, TN","industry":"Manufacturing"},
+    {"date":"2026-05-09","jobTitle":"Commercial Relationship Specialist","company":"Regions Bank","location":"Clarksville, TN","industry":"Banking"},
+    {"date":"2026-05-09","jobTitle":"Physical Therapist (Sango)","company":"U.S. Physical Therapy","location":"Clarksville, TN","industry":"Healthcare"},
+    {"date":"2026-05-09","jobTitle":"Nurse Practitioner or Physician Assistant - HouseCalls - Statewide Traveler - TN","company":"UnitedHealth Group","location":"Clarksville, TN","industry":"Healthcare"},
+    {"date":"2026-05-09","jobTitle":"SOCCENT OCONUS Part-time VAK Field Service Representative (FSR)","company":"Nightwing","location":"Clarksville, TN","industry":"Defense / Technical"},
+    {"date":"2026-05-10","jobTitle":"Exercise Physiologist – Cardiac Rehab (Outpatient)","company":"Vanderbilt University Medical Center","location":"Clarksville, TN","industry":"Healthcare"},
+    {"date":"2026-05-10","jobTitle":"ER Registration Specialist - Clarksville (7 p.m. - 3:30 a.m.)","company":"Vanderbilt University Medical Center","location":"Clarksville, TN","industry":"Healthcare Administration"},
+    {"date":"2026-05-10","jobTitle":"ER Registration - Clarksville FSED (Weekends, Days)","company":"Vanderbilt University Medical Center","location":"Clarksville, TN","industry":"Healthcare Administration"},
+    {"date":"2026-05-11","jobTitle":"Part Time - Sales Associate - Flexible","company":"Lowe's","location":"Clarksville, TN","industry":"Retail"}
+  ]
+};
+
+function renderUploadedJobLeads() {
+  const body = document.querySelector('#job-leads-table tbody');
+  if (!body || !uploadedJobLeads.jobLeads) return;
+  body.innerHTML = uploadedJobLeads.jobLeads.map((job) => `
+    <tr>
+      <td style="padding:8px;border:1px solid #e2e8f0;">${job.date}</td>
+      <td style="padding:8px;border:1px solid #e2e8f0;">${job.jobTitle}</td>
+      <td style="padding:8px;border:1px solid #e2e8f0;">${job.company}</td>
+      <td style="padding:8px;border:1px solid #e2e8f0;">${job.location}</td>
+      <td style="padding:8px;border:1px solid #e2e8f0;">${job.industry}</td>
+    </tr>
+  `).join('');
+}
+
 window.addEventListener('DOMContentLoaded', () => {
   setToday();
   document.getElementById('ci-fail-fields')?.classList.add('hidden');
+  renderUploadedJobLeads();
 });
 
 // ════════════════════════════════════════════════
