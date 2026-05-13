@@ -229,7 +229,53 @@ textarea.json-editor:focus{border-color:var(--teal);}
 <div id="user-html" class="card" style="margin:0 24px 18px;">
   <div class="card-title"><span class="ct-dot"></span> Custom HTML</div>
   <div class="notice">Add your custom HTML inside the <code>#user-html-content</code> container below.</div>
-  <div id="user-html-content"></div>
+  <div id="user-html-content">
+  <style>
+  #vep-app{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#0f172a;
+      color:white;
+      border-radius:12px;
+      overflow:hidden;
+  }
+  #vep-app header{padding:20px;text-align:center;background:#111827;border-bottom:1px solid #334155;}
+  #vep-app main{display:grid;grid-template-columns:320px 1fr;gap:20px;padding:20px;}
+  #vep-app .panel,#vep-app .output{background:#111827;border-radius:16px;padding:20px;}
+  #vep-app label{display:block;margin-top:14px;margin-bottom:5px;font-weight:bold;}
+  #vep-app input,#vep-app select,#vep-app textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #334155;background:#020617;color:white;box-sizing:border-box;}
+  #vep-app textarea{min-height:90px;}
+  #vep-app button{margin-top:12px;width:100%;padding:12px;border:none;border-radius:10px;font-weight:bold;cursor:pointer;background:#38bdf8;color:#000;}
+  #vep-app button:hover{opacity:.9;}
+  #vep-app #result{background:white;color:black;border-radius:12px;padding:24px;min-height:700px;}
+  #vep-app #result h1,#vep-app #result h2,#vep-app #result h3{color:black;}
+  #vep-app .quote{border-left:4px solid #0ea5e9;padding-left:14px;margin:15px 0;font-style:italic;}
+  #vep-app ul li{margin-bottom:8px;}
+  #vep-app .smallbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:900px){#vep-app main{grid-template-columns:1fr;}}
+  </style>
+
+  <section id="vep-app">
+    <header>
+      <h1 style="color:#fff;">Veteran Employer Value Proposition Generator</h1>
+      <p>Create employer talking scripts, elevator pitches, and leave-behinds.</p>
+    </header>
+    <main>
+      <div class="panel">
+        <label>Audience</label><select id="audience"><option value="general">General Employer</option><option value="hr">HR / Recruiter</option><option value="small">Small Business</option><option value="formal">Formal Business</option></select>
+        <label>Industry</label><select id="industry"><option>General Workforce</option><option>Manufacturing</option><option>Healthcare</option><option>Transportation / Logistics</option><option>Security</option><option>Information Technology</option><option>Skilled Trades</option></select>
+        <label>Location</label><input id="location" value="Clarksville / Montgomery County">
+        <label>Military Community</label><input id="base" value="Fort Campbell">
+        <label>Your Services</label><textarea id="services">Veteran referrals, hiring event coordination, military-to-civilian skills translation, workforce resource support, employer outreach, and post-placement support.</textarea>
+        <label>Employer Pain Points</label><textarea id="pain">Finding dependable workers, improving retention, identifying leadership talent, and reducing hiring friction.</textarea>
+        <label>Presenter Name</label><input id="name" value="Mario McMichael">
+        <button onclick="generateContent()">Generate Full Script</button>
+        <div class="smallbtns"><button onclick="copyText()">Copy</button><button onclick="window.print()">Save PDF</button></div>
+      </div>
+      <div class="output"><div id="result"><h1>Ready to Generate</h1><p>Click <strong>Generate Full Script</strong> to create the employer outreach content.</p></div></div>
+    </main>
+  </section>
+</div>
 </div>
 
 <!-- ═══════════════════════════ MAIN LAYOUT ═══════════════════════════ -->
@@ -1577,5 +1623,20 @@ function clearJsonStatus(id) {
   if (el) { el.className = 'json-status'; el.textContent = ''; }
 }
 </script>
+
+<script>
+function generateContent(){
+let audience=document.getElementById("audience").value,industry=document.getElementById("industry").value,location=document.getElementById("location").value,base=document.getElementById("base").value,services=document.getElementById("services").value,pain=document.getElementById("pain").value,name=document.getElementById("name").value;
+let intro="",toneLine="";
+if(audience==="general"){intro="We help employers connect with veterans who already bring leadership, reliability, adaptability, and teamwork into the workplace.";toneLine="The focus is on creating strong long-term workforce matches.";}
+if(audience==="hr"){intro="We help HR teams identify veteran talent whose military experience translates into leadership, operations, logistics, technical support, and structured team environments.";toneLine="Our role is helping reduce hiring friction and improve candidate alignment.";}
+if(audience==="small"){intro="For small businesses, every hire matters. Veterans often bring accountability, professionalism, and consistency from day one.";toneLine="We help employers better understand how military experience applies to civilian positions.";}
+if(audience==="formal"){intro="Veteran workforce partnerships provide employers access to a disciplined and mission-focused talent pipeline connected to the military community.";toneLine="The objective is workforce alignment, retention improvement, and operational stability.";}
+let html=`<h1>Veteran Employer Value Proposition</h1><h2>30-Second Elevator Pitch</h2><div class="quote">${intro}</div><p>In the ${location} region, especially with the strong military connection to ${base}, employers have access to a large veteran and military-connected workforce.</p><p>Through services such as ${services}, we help bridge the gap between military experience and civilian hiring needs.</p><h2>2-Minute Employer Talking Script</h2><p>One thing I try to explain to employers is that hiring veterans is not simply about supporting veterans. It is also about accessing a workforce that already understands accountability, teamwork, communication, adaptability, and operating under pressure.</p><p>Many veterans already possess transferable knowledge, skills, and abilities that apply directly to civilian industries such as ${industry.toLowerCase()}. The challenge is often that military experience may not immediately translate clearly on a résumé.</p><p>That is where we help. We work with employers to better understand military backgrounds, identify transferable skills, and connect businesses with candidates who align with their operational needs.</p><p>Many employers are dealing with challenges related to ${pain}. Veterans often bring the type of workplace discipline, structure, and mission focus that helps address those concerns.</p><p>${toneLine}</p><h2>Employer Benefits</h2><ul><li>Access to a veteran talent pipeline</li><li>Improved workforce reliability and retention</li><li>Leadership and teamwork experience</li><li>Military-to-civilian skill translation support</li><li>Connection to workforce resources and hiring events</li><li>Reduced hiring friction</li><li>Candidates experienced in structured environments</li></ul><h2>Reusable Presentation Phrases</h2><ul><li>We help reduce hiring friction.</li><li>Veterans often bring many of the soft skills employers struggle to train.</li><li>Military experience may look different on paper, but the underlying skill set is often transferable.</li><li>We focus on strong matches, not just quick placements.</li><li>This region has a strong military-connected workforce pipeline.</li><li>Veterans are accustomed to mission-focused and team-oriented environments.</li></ul><h2>Contact</h2><p><strong>${name}</strong><br>Veteran Workforce Services<br>${location}</p>`;
+document.getElementById("result").innerHTML=html;localStorage.setItem("savedEmployerGenerator",html);}
+function copyText(){let text=document.getElementById("result").innerText;navigator.clipboard.writeText(text).then(()=>alert("Content copied.")).catch(()=>alert("Copy failed."));}
+window.addEventListener('load',()=>{let saved=localStorage.getItem("savedEmployerGenerator");if(saved){document.getElementById("result").innerHTML=saved;}});
+</script>
+
 </body>
 </html>
