@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JVSG / NVTI Study Guide</title>
+<style>
+body{font-family:Arial,sans-serif;background:#0f172a;color:#f1f5f9;margin:0;padding:20px;line-height:1.6}
+.container{max-width:1100px;margin:auto}
+.card{background:#1e293b;padding:20px;border-radius:14px;margin-bottom:20px;border:1px solid #334155}
+h1,h2,h3{color:#fbbf24}
+button{background:#fbbf24;color:#111827;border:none;padding:12px 20px;border-radius:10px;font-weight:bold;cursor:pointer}
+button:hover{opacity:.9}
+.question{margin-bottom:25px;padding:15px;background:#111827;border-radius:10px}
+label{display:block;margin:8px 0;cursor:pointer}
+.result{font-size:1.4rem;font-weight:bold;margin-top:20px}
+.correct{color:#22c55e}
+.incorrect{color:#ef4444}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="card">
+<h1>JVSG / NVTI Interactive Study Guide</h1>
+<p>Study the core concepts below, then take the graded practice test.</p>
+</div>
+
+<div class="card">
+<h2>Key Concepts</h2>
+<h3>VOW Act</h3>
+<ul>
+<li>Prevents JVSG staff from performing non-veteran duties.</li>
+<li>Enforced through audits, NVTI training, and testing.</li>
+</ul>
+
+<h3>DOL VETS Mission</h3>
+<ul>
+<li>Prepare</li>
+<li>Provide</li>
+<li>Protect</li>
+<li>Promote</li>
+</ul>
+
+<h3>DVOP</h3>
+<ul>
+<li>Provides intensive services and case management.</li>
+<li>Works with veterans with SBEs/QEBs.</li>
+</ul>
+
+<h3>LVER</h3>
+<ul>
+<li>Primary duty: Employer outreach.</li>
+<li>Secondary duty: Staff training and capacity building.</li>
+</ul>
+
+<h3>Priority of Service</h3>
+<ul>
+<li>Veterans receive priority access to workforce services.</li>
+<li>Requires 1 day active duty and discharge other than dishonorable.</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>Practice Test</h2>
+<form id="quizForm">
+
+<div class="question">
+<p>1. What is the primary function of a DVOP?</p>
+<label><input type="radio" name="q1" value="a"> Employer outreach</label>
+<label><input type="radio" name="q1" value="b"> Intensive services and case management</label>
+<label><input type="radio" name="q1" value="c"> Approving unemployment claims</label>
+</div>
+
+<div class="question">
+<p>2. What is the primary function of an LVER?</p>
+<label><input type="radio" name="q2" value="a"> Employer outreach</label>
+<label><input type="radio" name="q2" value="b"> Disability compensation</label>
+<label><input type="radio" name="q2" value="c"> VA healthcare enrollment</label>
+</div>
+
+<div class="question">
+<p>3. What does the VOW Act prohibit?</p>
+<label><input type="radio" name="q3" value="a"> Resume workshops</label>
+<label><input type="radio" name="q3" value="b"> Veteran referrals</label>
+<label><input type="radio" name="q3" value="c"> Non-veteran duties for JVSG staff</label>
+</div>
+
+<div class="question">
+<p>4. Which are the 4 Ps of DOL VETS?</p>
+<label><input type="radio" name="q4" value="a"> Prepare, Provide, Protect, Promote</label>
+<label><input type="radio" name="q4" value="b"> Plan, Process, Prevent, Perform</label>
+<label><input type="radio" name="q4" value="c"> Prepare, Position, Promote, Publish</label>
+</div>
+
+<div class="question">
+<p>5. What is required for Priority of Service eligibility?</p>
+<label><input type="radio" name="q5" value="a"> 10 years active duty</label>
+<label><input type="radio" name="q5" value="b"> 1 day active duty and discharge other than dishonorable</label>
+<label><input type="radio" name="q5" value="c"> VA disability rating</label>
+</div>
+
+<div class="question">
+<p>6. What is the primary purpose of the JVSG program?</p>
+<label><input type="radio" name="q6" value="a"> Provide federal funding to state workforce agencies</label>
+<label><input type="radio" name="q6" value="b"> Operate military hospitals</label>
+<label><input type="radio" name="q6" value="c"> Approve GI Bill payments</label>
+</div>
+
+<button type="button" onclick="gradeQuiz()">Submit Test</button>
+</form>
+
+<div id="results" class="result"></div>
+</div>
+</div>
+
+<script>
+function gradeQuiz(){
+const answers={q1:'b',q2:'a',q3:'c',q4:'a',q5:'b',q6:'a'};
+let score=0;
+let total=Object.keys(answers).length;
+
+for(let key in answers){
+let selected=document.querySelector('input[name="'+key+'"]:checked');
+if(selected && selected.value===answers[key]){
+score++;
+}
+}
+
+let percent=Math.round((score/total)*100);
+let results=document.getElementById('results');
+results.innerHTML='Score: '+score+' / '+total+' ('+percent+'%)';
+
+if(percent>=80){
+results.className='result correct';
+results.innerHTML += '<br>Excellent work. You are test ready.';
+}else{
+results.className='result incorrect';
+results.innerHTML += '<br>Review the study guide and try again.';
+}
+}
+</script>
+</body>
+</html>
