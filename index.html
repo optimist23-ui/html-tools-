@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>DVOP Case Note Generator</title>
+<title>Sales Pitch Generator</title>
 <style>
 :root {
   --navy:   #1a2744;
@@ -184,7 +184,7 @@ textarea.json-editor:focus{border-color:var(--teal);}
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:3px;">
         <span class="badge">JVSG DVOP</span>
       </div>
-      <h1>Case Note Generator</h1>
+      <h1>Sales Pitch Generator</h1>
       <p>American Job Center – Clarksville &nbsp;·&nbsp; Program: Jobs for Veterans State Grant</p>
     </div>
   </div>
@@ -229,7 +229,43 @@ textarea.json-editor:focus{border-color:var(--teal);}
 <div id="user-html" class="card" style="margin:0 24px 18px;">
   <div class="card-title"><span class="ct-dot"></span> Custom HTML</div>
   <div class="notice">Add your custom HTML inside the <code>#user-html-content</code> container below.</div>
-  <div id="user-html-content"></div>
+  <div id="user-html-content">
+    <div class="form-row" style="margin-top:10px;">
+      <div class="form-group full">
+        <label>Offer / Product</label>
+        <input type="text" id="pitch-product" placeholder="e.g., AI-powered resume review service"/>
+      </div>
+      <div class="form-group">
+        <label>Audience</label>
+        <input type="text" id="pitch-audience" placeholder="e.g., busy hiring managers"/>
+      </div>
+      <div class="form-group">
+        <label>Tone</label>
+        <select id="pitch-tone">
+          <option>Professional</option>
+          <option>Friendly</option>
+          <option>Bold</option>
+          <option>Consultative</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Length</label>
+        <select id="pitch-length">
+          <option value="short">Short (1-2 sentences)</option>
+          <option value="medium" selected>Medium (3-4 sentences)</option>
+          <option value="long">Long (5-6 sentences)</option>
+        </select>
+      </div>
+      <div class="form-group full">
+        <label>Key Benefits (comma-separated)</label>
+        <textarea id="pitch-benefits" placeholder="e.g., saves time, reduces cost-per-hire, improves candidate quality"></textarea>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-green" onclick="generateSalesPitch()">Generate Sales Pitch</button>
+      <button class="btn btn-ghost" onclick="clearPitchFields()">Clear Pitch Fields</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════════════════════ MAIN LAYOUT ═══════════════════════════ -->
@@ -1293,6 +1329,63 @@ function buildUnsuccessful(date, cm, vet) {
   if (notes) n += `\nNotes: ${notes}\n`;
   n += `\nNext Outreach Attempt: ${nextDate}\n`;
   return n;
+}
+
+
+function generateSalesPitch() {
+  const product = v('pitch-product') || 'our solution';
+  const audience = v('pitch-audience') || 'your team';
+  const tone = v('pitch-tone') || 'Professional';
+  const length = v('pitch-length') || 'medium';
+  const benefits = (v('pitch-benefits') || '')
+    .split(',')
+    .map(b => b.trim())
+    .filter(Boolean);
+
+  const benefitText = benefits.length
+    ? benefits.join(', ')
+    : 'faster results, simpler workflows, and better outcomes';
+
+  const openers = {
+    Professional: `If you are looking to help ${audience} deliver stronger results, ${product} is built for that purpose.`,
+    Friendly: `Want to make life easier for ${audience}? ${product} can help right away.`,
+    Bold: `${product} is the fastest way for ${audience} to level up performance.`,
+    Consultative: `Based on what ${audience} typically need, ${product} is a practical fit.`
+  };
+
+  const mids = [
+    `It helps with ${benefitText}.`,
+    `Teams using it typically see value quickly without adding complexity.`
+  ];
+
+  const closer = `If you would like, I can tailor a quick demo focused on your exact goals.`;
+
+  let lines = [openers[tone] || openers.Professional];
+  if (length !== 'short') lines = lines.concat(mids);
+  if (length === 'long') lines.push('It is designed to plug into existing processes so adoption stays smooth and measurable.');
+  lines.push(closer);
+
+  const pitch = lines.join(' ');
+  const out = document.getElementById('output-area');
+  out.textContent = pitch;
+  document.getElementById('char-count').textContent = `${pitch.length} characters`;
+  document.getElementById('copy-btn').classList.remove('hidden');
+  const tag = document.getElementById('output-tag');
+  tag.textContent = 'Sales Pitch';
+  tag.className = 'output-tag tag-green';
+  tag.classList.remove('hidden');
+  resetCopyBtn();
+}
+
+function clearPitchFields() {
+  ['pitch-product','pitch-audience','pitch-benefits'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const tone = document.getElementById('pitch-tone');
+  if (tone) tone.selectedIndex = 0;
+  const len = document.getElementById('pitch-length');
+  if (len) len.value = 'medium';
 }
 
 // ════════════════════════════════════════════════
